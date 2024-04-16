@@ -76,7 +76,8 @@ void displayOptions() {
     cout << "1. Add Patient\n";
     cout << "2. Serve Patient\n";
     cout << "3. Display Queue\n";
-    cout << "4. Exit\n";
+    cout << "4. Peek Next Patient\n";
+    cout << "5. Exit\n";
     cout << "Choose an option: ";
 }
 
@@ -97,7 +98,7 @@ int main() {
         switch (choice) {
         case 1:
             cout << "Enter patient's name: ";
-            cin >> ws;
+            cin >> ws;  // Clear leading whitespace
             getline(cin, name);
             cout << "Enter patient's age: ";
             cin >> age;
@@ -114,6 +115,12 @@ int main() {
             queue.displayQueue();
             break;
         case 4:
+            name = queue.peekNextPatient();
+            if (!name.empty()) {
+                cout << "Next patient to be served: " << name << endl;
+            }
+            break;
+        case 5:
             return 0;
         default:
             cout << "Invalid choice. Please try again." << endl;
