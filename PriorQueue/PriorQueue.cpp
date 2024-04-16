@@ -1,78 +1,123 @@
 #include <iostream>
+#include <string>
+
 using namespace std;
 
-enum class CustomerType {
-    HURTS,
-    DOESNTHURTS
-};
-
-struct Customer {
+struct Patient {
     string name;
-    CustomerType type;
+    int age;
+    Patient* next;
 
-    Customer(const string& name, CustomerType type) : name(name), type(type) {}
+    Patient(string n, int a) : name(n), age(a), next(nullptr) {}
 };
 
-class DentistQueue {
-private:
-    Customer* queue;
-    int capacity;
-    int size;
-
+class PriorityHealthcareQueue {
 public:
-    DentistQueue(int capacity) : capacity(capacity), size(0) {
-        queue = new Customer[capacity];
-    }
+    Patient* head;
 
-    ~DentistQueue() {
-        delete[] queue;
-    }
+    PriorityHealthcareQueue() : head(nullptr) {}
 
-    // Додавання клієнта в чергу
-    void enqueue(const string& name, CustomerType type) {
-        if (size == capacity) {
-            cerr << "Queue is full\n";
-            return;
+    ~PriorityHealthcareQueue() {
+        while (head != nullptr) {
+            Patient* temp = head;
+            head = head->next;
+            delete temp;
         }
-
-        Customer customer(name, type);
-        queue[size++] = customer;
-        // Додаткова логіка може бути додана тут для обробки пріоритетів
     }
 
-    // Видалення та повернення першого клієнта з черги
-    Customer dequeue() {
-        if (size == 0) {
-            cerr << "Queue is empty\n";
-            return { "", CustomerType::DOESNTHURTS };
+    void insertPatient(string name, int age) {
+        Patient* newPatient = new Patient(name, age);
+        if (head == nullptr || head->age < age) { // Higher age, higher priority
+            newPatient->next = head;
+            head = newPatient;
         }
-
-        Customer front = queue[0];
-        for (int i = 1; i < size; ++i) {
-            queue[i - 1] = queue[i];
+        else {
+            Patient* current = head;
+            while (current->next != nullptr && current->next->age >= age) {
+                current = current->next;
+            }
+            newPatient->next = current->next;
+            current->next = newPatient;
         }
-        size--;
-        return front;
     }
 
-    // Перевірка, чи черга порожня
-    bool isEmpty() const {
-        return size == 0;
+    string servePatient() {
+        if (head == nullptr) {
+            cout << "Queue is empty" << endl;
+            return "";
+        }
+        string name = head->name;
+        Patient* temp = head;
+        head = head->next;
+        delete temp;
+        return name;
+    }
+
+    void displayQueue() {
+        Patient* current = head;
+        while (current != nullptr) {
+            cout << "Patient: " << current->name << ", Age: " << current->age << endl;
+            current = current->next;
+        }
+    }
+
+    // View the oldest patient without removing
+    string peekNextPatient() {
+        if (head == nullptr) {
+            cout << "Queue is empty" << endl;
+            return "";
+        }
+        return head->name;
     }
 };
+
+void displayOptions() {
+    cout << "\nMenu:\n";
+    cout << "1. Add Patient\n";
+    cout << "2. Serve Patient\n";
+    cout << "3. Display Queue\n";
+    cout << "4. Exit\n";
+    cout << "Choose an option: ";
+}
 
 int main() {
-    DentistQueue dentistQueue(10); // Створення черги для магазину з максимальним розміром 10
+    PriorityHealthcareQueue queue;
+    int choice;
+    string name;
+    int age;
 
-    // Додавання клієнтів до черги
-    dentistQueue.enqueue("Nazar", CustomerType::DOESNTHURTS);
-    dentistQueue.enqueue("Kate", CustomerType::HURTS);
-    dentistQueue.enqueue("Oleh", CustomerType::DOESNTHURTS);
+    queue.insertPatient("John Doe", 60);
+    queue.insertPatient("Jane Smith", 65);
+    queue.insertPatient("Alice Johnson", 58);
+    queue.insertPatient("Bob Brown", 70);
 
-    // Обробка черги та обслуговування клієнтів
-    while (!dentistQueue.isEmpty()) {
-        Customer customer = dentistQueue.dequeue();
-        cout << "Serving customer: " << customer.name << endl;
+    while (true) {
+        displayOptions();
+        cin >> choice;
+        switch (choice) {
+        case 1:
+            cout << "Enter patient's name: ";
+            cin >> ws;
+            getline(cin, name);
+            cout << "Enter patient's age: ";
+            cin >> age;
+            queue.insertPatient(name, age);
+            break;
+        case 2:
+            name = queue.servePatient();
+            if (!name.empty()) {
+                cout << name << " has been served." << endl;
+            }
+            break;
+        case 3:
+            cout << "Current queue of patients:" << endl;
+            queue.displayQueue();
+            break;
+        case 4:
+            return 0;
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+        }
     }
 
     return 0;
